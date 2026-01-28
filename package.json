@@ -1,0 +1,24 @@
+{
+  "name": "pumpfun-hackthon",
+  "private": true,
+  "workspaces": [
+    "apps/*"
+  ],
+  "engines": {
+    "node": ">=22.0.0",
+    "npm": ">=10.0.0"
+  },
+  "scripts": {
+    "dev": "npm -w apps/web run dev",
+    "dev:signer": "npm -w apps/signer run dev",
+    "build": "npm -ws run build",
+    "start": "npm -w apps/web run start",
+    "lint": "npm -ws run lint",
+    "format": "prettier -w .",
+    "format:check": "prettier -c .",
+    "test": "npm -ws run test"
+  },
+  "devDependencies": {
+    "prettier": "^3.6.2"
+  }
+}

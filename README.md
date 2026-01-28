@@ -7,20 +7,66 @@
 - `apps/web`：业务服务（Next.js，包含前端 + API）
 - `apps/signer`：签发服务（Signing Service，负责出金交易构建与签名；仅供业务服务内部调用）
 
+## 当前进度
+
+- 已完成：M0 / M1 / M2 / M3
+- 待完成：M4–M8（购票/开奖/出金/webhook/backfill/测试完善）
+
 ## 环境要求
 
 - Node.js：>= 22
 - npm：>= 10
 
-## 本地开发（骨架阶段）
+## 环境变量（M0–M3）
+
+### `apps/web/.env.local`（业务服务）
+
+必需：
+- `DATABASE_URL`
+- `AUTH_JWT_SECRET`
+- `SOLANA_RPC_URL`
+- `USDC_MINT`
+- `PLATFORM_FEE_WALLET`
+- `CUSTODY_WALLET_PUBLIC_KEY`
+- `HELIUS_API_KEY`
+- `HELIUS_WEBHOOK_ID`
+
+建议：
+- `DRAFT_EXPIRES_SECONDS`（默认 600）
+- `DEFAULT_COVER_IMAGE_URL`
+
+### `apps/signer/.env.local`（签发服务）
+
+仅在启动 signer 时必需：
+- `SIGNER_SECRET`
+- `PORT`
+
+> 注：如数据库要求 SSL，运行迁移/测试时建议带 `PGSSLMODE=require` 或在 `DATABASE_URL` 中加 `sslmode=require`。
+
+## Helius Webhook 配置（M3 必需）
+
+1. 在 Helius 控制台创建 **Raw Transaction Webhook**。  
+2. Commitment 选择 `finalized`。  
+3. Webhook URL 必须是公网可访问的 HTTPS 地址（例如 Render 的服务域名）。  
+4. 获取 `HELIUS_WEBHOOK_ID` 并填入 `.env.local`。  
+
+> M3 会通过 Helius API 把 `usdc_vault/prize_vault` 追加到 webhook 的监听地址列表。
+
+## 本地开发（M3 已实现）
 
 1. 安装依赖：
    - `npm install`
 2. 复制环境变量：
    - `cp apps/web/.env.example apps/web/.env.local`
    - `cp apps/signer/.env.example apps/signer/.env.local`
-3. 启动：
+3. 迁移数据库：
+   - `PGSSLMODE=require npm -w apps/web run db:migrate`
+4. 启动服务：
    - 业务服务：`npm run dev`
-   - 签发服务：`npm run dev:signer`
+   - 签发服务（可选）：`npm run dev:signer`
 
-> 说明：当前仅为 M0 工程骨架，后续里程碑会逐步补齐数据库、Webhook、backfill 与出金逻辑。
+## 常用命令
+
+- 格式化：`npm run format`
+- Lint：`npm run lint`
+- 测试：`PGSSLMODE=require npm run test`
