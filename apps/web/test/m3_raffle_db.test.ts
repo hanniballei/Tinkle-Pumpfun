@@ -68,6 +68,9 @@ if (!hasDatabase) {
           ],
         );
 
+        const prizeVault = `prize_vault_${raffleId}`;
+        const usdcVault = `usdc_vault_${raffleId}`;
+
         await client.query(
           `
             UPDATE raffles
@@ -77,7 +80,7 @@ if (!hasDatabase) {
                 webhook_last_error = NULL
             WHERE id = $3;
           `,
-          ["prize_vault", "usdc_vault", raffleId],
+          [prizeVault, usdcVault, raffleId],
         );
 
         const result = await client.query(
@@ -89,8 +92,8 @@ if (!hasDatabase) {
           [raffleId],
         );
         assert.equal(result.rowCount, 1);
-        assert.equal(result.rows[0].prize_vault, "prize_vault");
-        assert.equal(result.rows[0].usdc_vault, "usdc_vault");
+        assert.equal(result.rows[0].prize_vault, prizeVault);
+        assert.equal(result.rows[0].usdc_vault, usdcVault);
         assert.ok(result.rows[0].webhook_registered_at);
       } finally {
         await client.query("ROLLBACK");

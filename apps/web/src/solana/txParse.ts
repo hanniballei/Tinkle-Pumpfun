@@ -1,3 +1,5 @@
+import { decodeBase58 } from "../utils/base58";
+
 type TokenBalance = {
   accountIndex: number;
   mint: string;
@@ -6,6 +8,8 @@ type TokenBalance = {
   };
 };
 
+const MEMO_PROGRAM_ID = "MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr";
+
 export function extractAccountKeys(
   accountKeys:
     | string[]
@@ -13,9 +17,27 @@ export function extractAccountKeys(
         pubkey: string;
       }[],
 ): string[] {
-  return accountKeys.map((key) =>
-    typeof key === "string" ? key : key.pubkey,
-  );
+  return accountKeys.map((key) => (typeof key === "string" ? key : key.pubkey));
+}
+
+export function extractMemo(params: {
+  accountKeys: string[];
+  instructions: Array<{ programIdIndex: number; data: string }>;
+}): string | null {
+  for (const instruction of params.instructions) {
+    const programId = params.accountKeys[instruction.programIdIndex];
+    if (programId !== MEMO_PROGRAM_ID) continue;
+    const decoded = decodeMemoData(instruction.data);
+    if (decoded === null) return null;
+    return decoded;
+  }
+  return null;
+}
+
+function decodeMemoData(data: string): string | null {
+  const decoded = decodeBase58(data);
+  if (!decoded) return null;
+  return new TextDecoder().decode(decoded);
 }
 
 export function computeTokenNetAmount(params: {

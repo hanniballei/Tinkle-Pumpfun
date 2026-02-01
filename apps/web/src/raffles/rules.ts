@@ -22,7 +22,5 @@ export function computeDraftExpiresAt(params: {
 }): Date {
   const ttlMs = params.ttlSeconds * 1000;
   const expiresAt = new Date(params.now.getTime() + ttlMs);
-  return expiresAt.getTime() <= params.saleEndAt.getTime()
-    ? expiresAt
-    : params.saleEndAt;
+  return expiresAt.getTime() <= params.saleEndAt.getTime() ? expiresAt : params.saleEndAt;
 }

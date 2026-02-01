@@ -96,7 +96,7 @@ export async function POST(req: NextRequest) {
   const coverImageUrl =
     typeof body?.cover_image_url === "string" && body.cover_image_url
       ? body.cover_image_url
-      : process.env.DEFAULT_COVER_IMAGE_URL ?? null;
+      : (process.env.DEFAULT_COVER_IMAGE_URL ?? null);
 
   const connection = getSolanaConnection();
   let prizeTokenProgramId;

@@ -24,22 +24,22 @@
 
 ### M2：登录与鉴权（SIWS）
 
-- [ ] 实现签名登录：challenge（nonce）→ verify（签名）→ 会话（cookie/JWT）。
-- [ ] 写操作统一鉴权；webhook 与 `/api/admin/*` 走共享密钥鉴权（按 PRD：`HELIUS_WEBHOOK_SECRET` / `CRON_SECRET`）。
+- [x] 实现签名登录：challenge（nonce）→ verify（签名）→ 会话（cookie/JWT）。
+- [x] 写操作统一鉴权；webhook 与 `/api/admin/*` 走共享密钥鉴权（按 PRD：`HELIUS_WEBHOOK_SECRET` / `CRON_SECRET`）。
 
 ### M3：创建抽奖闭环（DRAFT → ACTIVE）
 
-- [ ] `POST /api/raffles`：创建 DRAFT（校验 draw_at、ticket/中奖票等规则）。
-- [ ] `POST /api/raffles/:id/vaults`：注册 `usdc_vault/prize_vault`，并调用 Helius API 追加监听地址列表。
-- [ ] `confirm-prize-deposit`：支持 webhook 触发 + 用户补交 `txSignature`；以 `prize_vault` 净入账固化最终 `prize_amount`，状态转 ACTIVE。
+- [x] `POST /api/raffles`：创建 DRAFT（校验 draw_at、ticket/中奖票等规则）。
+- [x] `POST /api/raffles/:id/vaults`：注册 `usdc_vault/prize_vault`，并调用 Helius API 追加监听地址列表。
+- [x] `confirm-prize-deposit`：支持 webhook 触发 + 用户补交 `txSignature`；以 `prize_vault` 净入账固化最终 `prize_amount`，状态转 ACTIVE。
 - [ ] DRAFT 过期策略：不删除，只做过期标记/隐藏，并保留补交/重新校验入口（避免资产孤儿）。
 
 ### M4：购票闭环（预占 → 支付确认 → 记票/拒付）
 
-- [ ] `POST /api/raffles/:id/orders`：创建订单并预占；固化 `expires_at/release_at`。
-- [ ] `POST /api/orders/:id/pay-tx`：后端生成未签名支付交易（锁定 `USDC_MINT`/`usdc_vault`/金额/`Memo=order_id`）。
-- [ ] `confirm-payment`：webhook 触发 + 用户补交 `txSignature`；按 `blockTime` 判定是否按时；不足票/已释放导致不记票则标 `REJECTED_PAID`。
-- [ ] 释放预占：处理 `RESERVED` 且 `now>=release_at` 的订单，事务+行锁保证不超卖。
+- [x] `POST /api/raffles/:id/orders`：创建订单并预占；固化 `expires_at/release_at`。
+- [x] `POST /api/orders/:id/pay-tx`：后端生成未签名支付交易（锁定 `USDC_MINT`/`usdc_vault`/金额/`Memo=order_id`）。
+- [x] `confirm-payment`：webhook 触发 + 用户补交 `txSignature`；按 `blockTime` 判定是否按时；不足票/已释放导致不记票则标 `REJECTED_PAID`。
+- [x] 释放预占：处理 `RESERVED` 且 `now>=release_at` 的订单，事务+行锁保证不超卖。
 
 ### M5：开奖闭环（Cron）
 

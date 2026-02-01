@@ -19,9 +19,7 @@ export async function appendHeliusWebhookAddresses(params: {
   }
 
   const data = (await current.json()) as WebhookPayload;
-  const existing = Array.isArray(data.accountAddresses)
-    ? data.accountAddresses
-    : null;
+  const existing = Array.isArray(data.accountAddresses) ? data.accountAddresses : null;
   if (!existing) {
     throw new Error("helius_invalid_response");
   }
@@ -48,7 +46,8 @@ function buildUpdatePayload(
   current: WebhookPayload,
   accountAddresses: string[],
 ): WebhookPayload {
-  const webhookURL = current.webhookURL ?? (current as { webhook_url?: string }).webhook_url;
+  const webhookURL =
+    current.webhookURL ?? (current as { webhook_url?: string }).webhook_url;
   const transactionTypes =
     current.transactionTypes ??
     (current as { transaction_types?: string[] }).transaction_types;
@@ -56,8 +55,7 @@ function buildUpdatePayload(
     current.webhookType ?? (current as { webhook_type?: string }).webhook_type;
   const authHeader =
     current.authHeader ?? (current as { auth_header?: string }).auth_header;
-  const txnStatus =
-    current.txnStatus ?? (current as { txn_status?: string }).txn_status;
+  const txnStatus = current.txnStatus ?? (current as { txn_status?: string }).txn_status;
 
   if (!webhookURL || !transactionTypes || !webhookType) {
     throw new Error("helius_missing_fields");

@@ -1,5 +1,10 @@
 import type { Connection, PublicKey } from "@solana/web3.js";
-import { SystemProgram, Transaction } from "@solana/web3.js";
+import {
+  PublicKey as Web3PublicKey,
+  SystemProgram,
+  Transaction,
+  TransactionInstruction,
+} from "@solana/web3.js";
 import {
   TOKEN_PROGRAM_ID,
   createInitializeAccountInstruction,
@@ -8,6 +13,7 @@ import {
 } from "@solana/spl-token";
 
 import { getSolanaConnection } from "./connection";
+import { getTokenProgramIdForMint } from "./mint";
 import { getTokenAccountSpaceForMint } from "./tokenAccount";
 
 export type PrizeDepositTxResult = {
@@ -15,6 +21,8 @@ export type PrizeDepositTxResult = {
   blockhash: string;
   lastValidBlockHeight: number;
 };
+
+export type OrderPaymentTxResult = PrizeDepositTxResult;
 
 export async function buildCreateVaultsAndDepositTx(params: {
   connection?: Connection;
@@ -37,14 +45,10 @@ export async function buildCreateVaultsAndDepositTx(params: {
     params.prizeMint,
     params.prizeTokenProgramId,
   );
-  const prizeRent = await connection.getMinimumBalanceForRentExemption(
-    prizeAccountSpace,
-  );
+  const prizeRent = await connection.getMinimumBalanceForRentExemption(prizeAccountSpace);
 
   const usdcAccountSpace = 165;
-  const usdcRent = await connection.getMinimumBalanceForRentExemption(
-    usdcAccountSpace,
-  );
+  const usdcRent = await connection.getMinimumBalanceForRentExemption(usdcAccountSpace);
 
   const creatorAta = await getAssociatedTokenAddress(
     params.prizeMint,
@@ -114,4 +118,73 @@ export async function buildCreateVaultsAndDepositTx(params: {
     blockhash,
     lastValidBlockHeight,
   };
+}
+
+export async function buildOrderPaymentTx(params: {
+  connection?: Connection;
+  buyerWallet: PublicKey;
+  usdcMint: PublicKey;
+  usdcVault: PublicKey;
+  amount: bigint;
+  memo: string;
+}): Promise<OrderPaymentTxResult> {
+  const connection = params.connection ?? getSolanaConnection();
+  if (params.amount <= 0n) {
+    throw new Error("invalid_amount");
+  }
+
+  const tokenProgramId = await getTokenProgramIdForMint(connection, params.usdcMint);
+  const buyerAta = await getAssociatedTokenAddress(
+    params.usdcMint,
+    params.buyerWallet,
+    false,
+    tokenProgramId,
+  );
+  const buyerAtaInfo = await connection.getAccountInfo(buyerAta, {
+    commitment: "confirmed",
+  });
+  if (!buyerAtaInfo) {
+    throw new Error("buyer_ata_not_found");
+  }
+
+  const { blockhash, lastValidBlockHeight } =
+    await connection.getLatestBlockhash("finalized");
+
+  const tx = new Transaction({
+    feePayer: params.buyerWallet,
+    recentBlockhash: blockhash,
+  });
+
+  tx.add(
+    createTransferInstruction(
+      buyerAta,
+      params.usdcVault,
+      params.buyerWallet,
+      params.amount,
+      [],
+      tokenProgramId,
+    ),
+    createMemoInstruction(params.memo, params.buyerWallet),
+  );
+
+  const serialized = tx.serialize({
+    requireAllSignatures: false,
+    verifySignatures: false,
+  });
+
+  return {
+    txBase64: serialized.toString("base64"),
+    blockhash,
+    lastValidBlockHeight,
+  };
+}
+
+const MEMO_PROGRAM_ID = new Web3PublicKey("MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr");
+
+function createMemoInstruction(memo: string, signer: PublicKey): TransactionInstruction {
+  return new TransactionInstruction({
+    programId: MEMO_PROGRAM_ID,
+    keys: [{ pubkey: signer, isSigner: true, isWritable: false }],
+    data: Buffer.from(memo, "utf8"),
+  });
 }

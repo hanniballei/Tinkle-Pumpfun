@@ -4,6 +4,7 @@
 ## 当前任务文档
 - `../TODO.md` - v0 Demo 实现 TODO（当前执行清单）
 - `workflow/260122-update-prd.md` - 更新 PRD：链下托管抽奖 v0 方案对齐（历史对齐记录）
+- `workflow/260201-m4-ticket-orders.md` - M4 购票闭环实现（订单/支付确认/释放预占）
 
 ## 全局重要记忆
 - v0 只做链下托管（无合约），只做启发式 pump.fun 过滤（mint 后四位为 `pump`）。
